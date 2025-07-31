@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern YouTube ID Extractor</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #0f172a;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --error: #ef4444;
+            --warning: #f59e0b;
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
+            min-height: 100vh;
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 50%;
+            filter: blur(40px);
+            opacity: 0.3;
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.3; }
+            50% { transform: translateX(-50%) scale(1.2); opacity: 0.5; }
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header p {
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+            position: relative;
+            z-index: 1;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        .card {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+            opacity: 0.5;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+
+        .card h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card h2::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: var(--primary);
+            border-radius: 50%;
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { opacity: 1; box-shadow: 0 0 5px var(--primary); }
+            50% { opacity: 0.5; box-shadow: 0 0 20px var(--primary); }
+        }
+
+        textarea {
+            width: 100%;
+            height: 300px;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border);
+            border-radius: 1rem;
+            color: var(--text-primary);
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.875rem;
+            resize: vertical;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            padding: 0.875rem 2rem;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.6s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .stats {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .stat-item {
+            padding: 0.5rem 1rem;
+            background: var(--bg-secondary);
+            border-radius: 0.5rem;
+            border: 1px solid var(--border);
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 1.5rem;
+            background: var(--bg-secondary);
+            border-radius: 0.75rem;
+            padding: 0.25rem;
+            border: 1px solid var(--border);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            border-radius: 0.5rem;
+            text-align: center;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            color: var(--text-secondary);
+            position: relative;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            transform: scale(1.02);
+        }
+
+        .tab:not(.active):hover {
+            color: var(--text-primary);
+            background: var(--bg-tertiary);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-section {
+            background: var(--bg-secondary);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            min-height: 300px;
+            border: 1px solid var(--border);
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .result-section::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .result-section::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+        }
+
+        .result-section::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 3px;
+        }
+
+        .result-item {
+            margin-bottom: 1rem;
+            padding: 1.5rem;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 1rem;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .result-item:hover {
+            transform: translateX(5px);
+            border-color: var(--primary);
+        }
+
+        .result-item h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: var(--text-primary);
+        }
+
+        .video-id {
+            color: var(--primary);
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            background: rgba(99, 102, 241, 0.1);
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-weight: 600;
+        }
+
+        .json-path {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            background: var(--bg-tertiary);
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.8rem;
+            color: var(--accent);
+        }
+
+        .video-preview {
+            background: var(--bg-secondary);
+            border-radius: 1rem;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .video-preview iframe {
+            border-radius: 0.75rem;
+        }
+
+        .preview-placeholder {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 3rem 1rem;
+        }
+
+        .preview-placeholder svg {
+            width: 4rem;
+            height: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .error {
+            color: var(--error);
+            background: rgba(239, 68, 68, 0.1);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .success-indicator {
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        .error-indicator {
+            color: var(--error);
+            font-weight: 600;
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            display: inline-block;
+            margin-left: 0.5rem;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+            transform: translateY(-1px);
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+        }
+
+        .video-info {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .video-info h4 {
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .video-info p {
+            margin: 0.25rem 0;
+            font-size: 0.875rem;
+        }
+
+        .channel-name {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .loading {
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .info-error {
+            color: var(--error);
+            font-size: 0.8rem;
+        }
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            opacity: 0.1;
+            animation: float 20s infinite linear;
+        }
+
+        .floating-element:nth-child(1) {
+            top: 20%;
+            left: 10%;
+            width: 60px;
+            height: 60px;
+            animation-delay: 0s;
+        }
+
+        .floating-element:nth-child(2) {
+            top: 60%;
+            right: 10%;
+            width: 80px;
+            height: 80px;
+            animation-delay: -7s;
+        }
+
+        .floating-element:nth-child(3) {
+            bottom: 20%;
+            left: 20%;
+            width: 40px;
+            height: 40px;
+            animation-delay: -14s;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); }
+            33% { transform: translateY(-30px) rotate(120deg); }
+            66% { transform: translateY(30px) rotate(240deg); }
+            100% { transform: translateY(0px) rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements">
+        <div class="floating-element"></div>
+        <div class="floating-element"></div>
+        <div class="floating-element"></div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>YouTube ID Extractor</h1>
+            <p>Extract YouTube Video IDs from complex HTML, JSON, or JavaScript code with modern precision</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="card">
+                <h2>Input Code</h2>
+                <textarea id="htmlCode" placeholder="Paste your complex HTML, JSON, or JavaScript code here..."></textarea>
+                <button class="btn" onclick="analyzeContent()">Extract YouTube IDs</button>
+                
+                <div class="stats">
+                    <div class="stat-item" id="char-count">Characters: 0</div>
+                    <div class="stat-item" id="line-count">Lines: 0</div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>Results</h2>
+                <div class="tabs">
+                    <div class="tab active" onclick="switchTab('all')">All Matches</div>
+                    <div class="tab" onclick="switchTab('valid')">Valid IDs</div>
+                    <div class="tab" onclick="switchTab('preview')">Preview</div>
+                </div>
+                
+                <div id="all-tab" class="tab-content active">
+                    <div class="result-section" id="result">
+                        <div class="preview-placeholder">
+                            <svg fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                            </svg>
+                            <p>Results will appear here after analysis...</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="valid-tab" class="tab-content">
+                    <div class="result-section" id="valid-result">
+                        <div class="preview-placeholder">
+                            <svg fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <p>Valid YouTube IDs will appear here...</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="preview-tab" class="tab-content">
+                    <div class="result-section">
+                        <div id="video-preview" class="video-preview">
+                            <div class="preview-placeholder">
+                                <svg fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <p>Video preview will appear here when a valid ID is selected</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Update stats as user types
+        document.getElementById('htmlCode').addEventListener('input', function() {
+            const text = this.value;
+            document.getElementById('char-count').textContent = `Characters: ${text.length}`;
+            document.getElementById('line-count').textContent = `Lines: ${text.split('\n').length}`;
+        });
+
+        function switchTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Deactivate all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Activate selected tab
+            document.getElementById(tabName + '-tab').classList.add('active');
+            document.querySelector(`.tab[onclick="switchTab('${tabName}')"]`).classList.add('active');
+        }
+
+        function analyzeContent() {
+            const htmlCode = document.getElementById('htmlCode').value;
+            const resultElement = document.getElementById('result');
+            const validResultElement = document.getElementById('valid-result');
+
+            resultElement.innerHTML = '';
+            validResultElement.innerHTML = '';
+
+            if (!htmlCode.trim()) {
+                resultElement.innerHTML = '<div class="error">Please enter some code to analyze</div>';
+                return;
+            }
+
+            const matches = [];
+
+            // 1. Find JSON videoId patterns
+            const videoIdRegex = /(?:"videoId")\s*[:=]\s*["']([a-zA-Z0-9_-]{11})["']/g;
+            let match;
+            while ((match = videoIdRegex.exec(htmlCode)) !== null) {
+                matches.push({
+                    id: match[1],
+                    fullMatch: match[0],
+                    position: match.index,
+                    type: 'JSON videoId'
+                });
+            }
+
+            // 2. Find complete YouTube URLs - all formats
+            const youtubeUrlRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|v\/|live\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})(?:\S+)?/g;
+            while ((match = youtubeUrlRegex.exec(htmlCode)) !== null) {
+                if (!matches.some(m => m.id === match[1])) {
+                    matches.push({
+                        id: match[1],
+                        fullMatch: match[0],
+                        position: match.index,
+                        type: 'YouTube URL',
+                        isUrl: true
+                    });
+                }
+            }
+
+            // 3. Find standalone 11-character YouTube IDs
+            const standaloneIds = htmlCode.match(/(?<![a-zA-Z0-9_-])([a-zA-Z0-9_-]{11})(?![a-zA-Z0-9_-])/g) || [];
+            standaloneIds.forEach(id => {
+                if (!matches.some(m => m.id === id)) {
+                    matches.push({
+                        id: id,
+                        fullMatch: id,
+                        position: htmlCode.indexOf(id),
+                        type: 'Standalone ID',
+                        isStandalone: true
+                    });
+                }
+            });
+
+            if (matches.length === 0) {
+                resultElement.innerHTML = '<div class="error">No YouTube video IDs or URLs found in the code.</div>';
+                validResultElement.innerHTML = '<div class="error">No valid YouTube IDs found.</div>';
+                return;
+            }
+
+            // Display all matches in the "All Matches" tab
+            matches.forEach((m, index) => {
+                const isValidId = isValidYouTubeId(m.id);
+                const urlIcon = m.isUrl ? '🔗' : '';
+                const typeLabel = m.type || 'Unknown';
+                
+                const resultItem = document.createElement('div');
+                resultItem.className = 'result-item';
+                resultItem.innerHTML = `
+                    <h3>Match ${index + 1}: ${urlIcon} <span class="video-id">${m.id}</span></h3>
+                    <p><strong>Type:</strong> ${typeLabel}</p>
+                    ${m.isUrl ? `<p><strong>Full URL:</strong> <span class="json-path">${m.fullMatch}</span></p>` : 
+                      (!m.isStandalone ? `<p><strong>JSON Path:</strong> <span class="json-path">${m.fullMatch}</span></p>` : '')}
+                    <p><strong>Position:</strong> ${m.position}</p>
+                    <p><strong>Valid YouTube ID:</strong> ${isValidId ? '<span class="success-indicator">✅ Yes</span>' : '<span class="error-indicator">❌ No</span>'}</p>
+                    ${m.isUrl ? `<p><strong>URL Valid:</strong> <span class="success-indicator">✅ Complete YouTube URL</span></p>` : ''}
+                    <button class="btn" onclick="previewVideo('${m.id}')" style="font-size: 0.875rem; padding: 0.5rem 1rem;">Preview Video</button>
+                    <button class="btn" onclick="getVideoInfo('${m.id}', 'all-${index}')" style="font-size: 0.875rem; padding: 0.5rem 1rem; background: var(--accent);">Get Video Info</button>
+                    <div id="video-info-all-${index}" class="video-info" style="display: none;"></div>
+                `;
+                resultElement.appendChild(resultItem);
+            });
+
+            // Display only valid IDs in the "Valid IDs" tab
+            const validMatches = matches.filter(m => isValidYouTubeId(m.id));
+            if (validMatches.length === 0) {
+                validResultElement.innerHTML = '<div class="error">No valid YouTube IDs found.</div>';
+            } else {
+                validMatches.forEach((m, index) => {
+                    const typeLabel = m.type || 'Unknown';
+                    const urlIcon = m.isUrl ? '🔗' : '';
+                    
+                    const resultItem = document.createElement('div');
+                    resultItem.className = 'result-item';
+                    resultItem.innerHTML = `
+                        <h3>Valid ${index + 1}: ${urlIcon} <span class="video-id">${m.id}</span></h3>
+                        <p><strong>Found as:</strong> ${typeLabel}</p>
+                        ${m.isUrl ? `<p><strong>Complete URL:</strong> <span class="json-path">${m.fullMatch}</span></p>` : 
+                          (!m.isStandalone ? `<p><strong>JSON Path:</strong> <span class="json-path">${m.fullMatch}</span></p>` : '')}
+                        <p><strong>URL Type:</strong> ${getYouTubeUrlType(m.fullMatch)}</p>
+                        <button class="btn" onclick="previewVideo('${m.id}')" style="font-size: 0.875rem; padding: 0.5rem 1rem;">Preview Video</button>
+                        <a href="https://youtube.com/watch?v=${m.id}" target="_blank" class="btn-secondary">Open in YouTube</a>
+                    `;
+                    validResultElement.appendChild(resultItem);
+                });
+            }
+
+            // If we found valid IDs, auto-preview the first one
+            if (validMatches.length > 0) {
+                previewVideo(validMatches[0].id);
+            }
+        }
+
+        function isValidYouTubeId(id) {
+            // Basic validation for YouTube IDs (11 characters, alphanumeric + _ and -)
+            return /^[a-zA-Z0-9_-]{11}$/.test(id);
+        }
+
+        function getYouTubeUrlType(url) {
+            if (!url) return 'ID Only';
+            if (url.includes('youtu.be/')) return 'Short URL (youtu.be)';
+            if (url.includes('/embed/')) return 'Embed URL';
+            if (url.includes('/live/')) return 'Live Stream URL';
+            if (url.includes('/watch?v=')) return 'Standard Watch URL';
+            if (url.includes('/v/')) return 'Direct Video URL';
+            return 'Other Format';
+        }
+
+        function previewVideo(videoId) {
+            const previewElement = document.getElementById('video-preview');
+            previewElement.innerHTML = `
+                <iframe width="100%" height="315" src="https://www.youtube.com/embed/${videoId}" 
+                    frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; 
+                    gyroscope; picture-in-picture" allowfullscreen style="border-radius: 0.75rem;"></iframe>
+                <div style="padding: 15px; color: var(--text-primary);">
+                    <h3 style="margin: 0; margin-bottom: 0.5rem;">Previewing: <span class="video-id">${videoId}</span></h3>
+                    <a href="https://youtube.com/watch?v=${videoId}" target="_blank" class="btn-secondary">Open in YouTube</a>
+                </div>
+            `;
+            
+            // Switch to preview tab
+            switchTab('preview');
+        }
+    </script>
+</body>
+</html>
